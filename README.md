@@ -1,5 +1,10 @@
 # Spending Tracker GUI
 
+[![CI](https://github.com/GWB2025/spending-tracker-gui/workflows/CI/badge.svg)](https://github.com/GWB2025/spending-tracker-gui/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![PySide6](https://img.shields.io/badge/GUI-PySide6-green.svg)](https://pypi.org/project/PySide6/)
+
 A desktop GUI application for tracking personal spending using PySide6, with optional Google Sheets integration for data synchronisation across devices.
 
 ## Features
@@ -22,7 +27,7 @@ A desktop GUI application for tracking personal spending using PySide6, with opt
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/spending-tracker-gui.git
+   git clone https://github.com/GWB2025/spending-tracker-gui.git
    cd spending-tracker-gui
    ```
 
