@@ -6,7 +6,7 @@ This module defines the Expense data model and related validation logic.
 """
 
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from dataclasses import dataclass, field
 import uuid
 
@@ -214,33 +214,33 @@ class ExpenseFilter:
     """Helper class for filtering expenses based on various criteria."""
 
     @staticmethod
-    def by_category(expenses: list[Expense], category: str) -> list[Expense]:
+    def by_category(expenses: List[Expense], category: str) -> List[Expense]:
         """Filter expenses by category."""
         return [exp for exp in expenses if exp.category.lower() == category.lower()]
 
     @staticmethod
     def by_amount_range(
-        expenses: list[Expense], min_amount: float, max_amount: float
-    ) -> list[Expense]:
+        expenses: List[Expense], min_amount: float, max_amount: float
+    ) -> List[Expense]:
         """Filter expenses by amount range."""
         return [exp for exp in expenses if min_amount <= exp.amount <= max_amount]
 
     @staticmethod
     def by_date_range(
-        expenses: list[Expense], start_date: str, end_date: str
-    ) -> list[Expense]:
+        expenses: List[Expense], start_date: str, end_date: str
+    ) -> List[Expense]:
         """Filter expenses by date range."""
         return [exp for exp in expenses if exp.is_in_date_range(start_date, end_date)]
 
     @staticmethod
-    def by_month(expenses: list[Expense], year: int, month: int) -> list[Expense]:
+    def by_month(expenses: List[Expense], year: int, month: int) -> List[Expense]:
         """Filter expenses by specific month."""
         return [exp for exp in expenses if exp.is_in_month(year, month)]
 
     @staticmethod
     def by_description_contains(
-        expenses: list[Expense], search_term: str
-    ) -> list[Expense]:
+        expenses: List[Expense], search_term: str
+    ) -> List[Expense]:
         """Filter expenses where description contains search term."""
         search_lower = search_term.lower()
         return [exp for exp in expenses if search_lower in exp.description.lower()]
@@ -250,12 +250,12 @@ class ExpenseAggregator:
     """Helper class for aggregating expense data."""
 
     @staticmethod
-    def total_amount(expenses: list[Expense]) -> float:
+    def total_amount(expenses: List[Expense]) -> float:
         """Calculate total amount of expenses."""
         return sum(exp.amount for exp in expenses)
 
     @staticmethod
-    def by_category(expenses: list[Expense]) -> Dict[str, float]:
+    def by_category(expenses: List[Expense]) -> Dict[str, float]:
         """Aggregate expenses by category."""
         category_totals = {}
         for expense in expenses:
@@ -266,7 +266,7 @@ class ExpenseAggregator:
         return category_totals
 
     @staticmethod
-    def by_month(expenses: list[Expense]) -> Dict[str, float]:
+    def by_month(expenses: List[Expense]) -> Dict[str, float]:
         """Aggregate expenses by month (YYYY-MM format)."""
         monthly_totals = {}
         for expense in expenses:
@@ -281,22 +281,22 @@ class ExpenseAggregator:
         return monthly_totals
 
     @staticmethod
-    def total_expenses_only(expenses: list[Expense]) -> float:
+    def total_expenses_only(expenses: List[Expense]) -> float:
         """Calculate total of expenses only (negative amounts)."""
         return sum(exp.amount for exp in expenses if exp.amount < 0)
 
     @staticmethod
-    def total_income_only(expenses: list[Expense]) -> float:
+    def total_income_only(expenses: List[Expense]) -> float:
         """Calculate total of income/credits only (positive amounts)."""
         return sum(exp.amount for exp in expenses if exp.amount > 0)
 
     @staticmethod
-    def total_spending_absolute(expenses: list[Expense]) -> float:
+    def total_spending_absolute(expenses: List[Expense]) -> float:
         """Calculate total spending as absolute value (for traditional spending analysis)."""
         return abs(ExpenseAggregator.total_expenses_only(expenses))
 
     @staticmethod
-    def average_per_day(expenses: list[Expense]) -> float:
+    def average_per_day(expenses: List[Expense]) -> float:
         """Calculate average spending per day (based on days with expenses)."""
         if not expenses:
             return 0.0

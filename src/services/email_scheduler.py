@@ -8,7 +8,7 @@ This service handles scheduling and sending automated email reports.
 import threading
 import time
 from datetime import datetime, timedelta, date
-from typing import List, Optional, Callable
+from typing import List, Optional, Callable, Tuple
 import logging
 from dataclasses import dataclass
 import schedule
@@ -263,7 +263,7 @@ class EmailScheduler:
 
     def send_monthly_report(
         self, custom_recipients: List[str] = None
-    ) -> tuple[bool, str]:
+    ) -> Tuple[bool, str]:
         """
         Send a monthly expense report immediately.
 
@@ -316,7 +316,7 @@ class EmailScheduler:
 
     def send_custom_report(
         self, start_date: str, end_date: str, recipients: List[str] = None
-    ) -> tuple[bool, str]:
+    ) -> Tuple[bool, str]:
         """
         Send a custom expense report for a specific date range.
 
