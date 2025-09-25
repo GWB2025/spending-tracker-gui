@@ -60,10 +60,14 @@ class EmailService:
         required_keys = ["smtp_server", "smtp_port", "username", "password"]
         if not all(key in email_settings for key in required_keys):
             return None
-        
+
         # Check that string values are not empty
         if not all(
-            email_settings.get(key, "").strip() if key != "smtp_port" else email_settings.get(key)
+            (
+                email_settings.get(key, "").strip()
+                if key != "smtp_port"
+                else email_settings.get(key)
+            )
             for key in ["smtp_server", "username", "password"]
         ):
             return None
@@ -72,7 +76,9 @@ class EmailService:
             smtp_server=email_settings["smtp_server"],
             smtp_port=email_settings["smtp_port"],
             username=email_settings["username"],
-            password=email_settings["password"].replace(" ", ""),  # Remove spaces from App Password
+            password=email_settings["password"].replace(
+                " ", ""
+            ),  # Remove spaces from App Password
             use_tls=email_settings.get("use_tls", True),
             from_email=email_settings.get("from_email", email_settings["username"]),
             from_name=email_settings.get("from_name", "Spending Tracker"),
@@ -107,7 +113,10 @@ class EmailService:
             server.login(email_config.username, email_config.password)
             server.quit()
 
-            return True, f"Email connection successful! Recipients configured: {len(recipients)}"
+            return (
+                True,
+                f"Email connection successful! Recipients configured: {len(recipients)}",
+            )
 
         except smtplib.SMTPAuthenticationError:
             return (

@@ -131,7 +131,7 @@ class Expense:
     def format_amount(self, currency_symbol: str = "$") -> str:
         """
         Format amount with currency symbol.
-        
+
         Args:
             currency_symbol: Currency symbol to use
 

@@ -73,12 +73,7 @@ jobs:
     
     - name: Test configuration loading
       run: |
-        python -c "
-        from src.config.config_manager import ConfigManager
-        config = ConfigManager('config/config.yaml')
-        print(f'App name: {config.get(\"app.name\")}')
-        print('Configuration loads successfully')
-        "
+        python -c "from src.config.config_manager import ConfigManager; config = ConfigManager('config/config.yaml'); app_config = config.get_app_config(); print('App name:', app_config.get('name', 'Unknown')); print('Configuration loads successfully')"
     
     - name: Run tests (if available)
       run: |

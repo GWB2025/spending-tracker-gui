@@ -67,10 +67,10 @@ class SpendingTrackerMainWindow(QMainWindow):
         self.init_ui()
         self.setup_connections()
         self.load_initial_data()
-        
+
         # Start email scheduler if enabled
         self.start_email_scheduler_on_launch()
-        
+
         # Connect tab change event to update email status when Email tab is selected
         self.tab_widget.currentChanged.connect(self.on_tab_changed)
 
@@ -547,25 +547,27 @@ class SpendingTrackerMainWindow(QMainWindow):
 
         # Password with enhanced features
         email_config_layout.addWidget(QLabel("Password:"), 3, 0)
-        
+
         # Create password container with toggle button
         password_container = QWidget()
         password_layout = QHBoxLayout(password_container)
         password_layout.setContentsMargins(0, 0, 0, 0)
         password_layout.setSpacing(2)
-        
+
         self.email_password_edit = QLineEdit()
         self.email_password_edit.setEchoMode(QLineEdit.Password)
-        self.email_password_edit.setPlaceholderText("16-character app password (spaces auto-removed)")
+        self.email_password_edit.setPlaceholderText(
+            "16-character app password (spaces auto-removed)"
+        )
         self.email_password_edit.setToolTip(
             "Gmail App Password (16 characters). Spaces will be automatically removed.\n"
             "Format: abcd efgh ijkl mnop → abcdefghijklmnop"
         )
         self.email_password_edit.setContextMenuPolicy(Qt.DefaultContextMenu)
-        
+
         # Connect text change event for validation and formatting
         self.email_password_edit.textChanged.connect(self.on_password_text_changed)
-        
+
         # Create show/hide password toggle button
         self.password_toggle_btn = QPushButton()
         self.password_toggle_btn.setFixedSize(30, 25)
@@ -579,16 +581,16 @@ class SpendingTrackerMainWindow(QMainWindow):
             "QPushButton:hover { background: #e9ecef; }"
             "QPushButton:pressed { background: #dee2e6; }"
         )
-        
+
         # Add validation status indicator
         self.password_status_label = QLabel()
         self.password_status_label.setFixedSize(20, 25)
         self.password_status_label.setAlignment(Qt.AlignCenter)
-        
+
         password_layout.addWidget(self.email_password_edit)
         password_layout.addWidget(self.password_toggle_btn)
         password_layout.addWidget(self.password_status_label)
-        
+
         email_config_layout.addWidget(password_container, 3, 1)
 
         # From Name
@@ -962,9 +964,9 @@ class SpendingTrackerMainWindow(QMainWindow):
         # Update the three separate cards
         self.income_label.setText(f"{currency_symbol}{summary['total_income']:.2f}")
         self.expenses_label.setText(f"{currency_symbol}{summary['total_expenses']:.2f}")
-        
+
         # Format net balance with appropriate color
-        net_balance = summary['net_balance']
+        net_balance = summary["net_balance"]
         if net_balance >= 0:
             self.balance_label.setStyleSheet(
                 "font-size: 24px; font-weight: bold; color: #28a745;"  # Green for positive
@@ -972,7 +974,7 @@ class SpendingTrackerMainWindow(QMainWindow):
             self.balance_label.setText(f"{currency_symbol}{net_balance:.2f}")
         else:
             self.balance_label.setStyleSheet(
-                "font-size: 24px; font-weight: bold; color: #dc3545;"  # Red for negative  
+                "font-size: 24px; font-weight: bold; color: #dc3545;"  # Red for negative
             )
             self.balance_label.setText(f"-{currency_symbol}{abs(net_balance):.2f}")
 
@@ -1189,7 +1191,7 @@ class SpendingTrackerMainWindow(QMainWindow):
             QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
             QMessageBox.Yes,
         )
-        
+
         if backup_reply == QMessageBox.Cancel:
             return
         elif backup_reply == QMessageBox.Yes:
@@ -1198,15 +1200,25 @@ class SpendingTrackerMainWindow(QMainWindow):
                 success, result = self.expense_controller.export_data(format_type="csv")
                 if success:
                     QMessageBox.information(
-                        self, "Backup Complete", f"Data exported to:\n{result}\n\nNow proceeding with factory reset..."
+                        self,
+                        "Backup Complete",
+                        f"Data exported to:\n{result}\n\nNow proceeding with factory reset...",
                     )
                 else:
-                    QMessageBox.warning(self, "Backup Failed", f"Export failed: {result}\n\nFactory reset cancelled for safety.")
+                    QMessageBox.warning(
+                        self,
+                        "Backup Failed",
+                        f"Export failed: {result}\n\nFactory reset cancelled for safety.",
+                    )
                     return
             except Exception as e:
-                QMessageBox.warning(self, "Backup Error", f"Export failed: {e}\n\nFactory reset cancelled for safety.")
+                QMessageBox.warning(
+                    self,
+                    "Backup Error",
+                    f"Export failed: {e}\n\nFactory reset cancelled for safety.",
+                )
                 return
-        
+
         # Proceed with reset confirmation
         reply = QMessageBox.question(
             self,
@@ -1235,7 +1247,7 @@ class SpendingTrackerMainWindow(QMainWindow):
                 QMessageBox.Yes | QMessageBox.No,
                 QMessageBox.No,
             )
-            
+
             if final_reply == QMessageBox.Yes:
                 self.perform_factory_reset()
 
@@ -1244,122 +1256,126 @@ class SpendingTrackerMainWindow(QMainWindow):
         try:
             import yaml
             from pathlib import Path
-            
+
             # 1. Clear all expense/transaction data
             self.expense_controller.mock_service.clear_all_data()
-            
+
             # 2. Reset configuration to defaults
             default_config = {
-                'app': {
-                    'name': 'Spending Tracker GUI',
-                    'version': '1.0.0',
-                    'debug': False,
-                    'window': {
-                        'title': 'Spending Tracker',
-                        'width': 1200,
-                        'height': 800,
-                        'resizable': True
-                    }
-                },
-                'google_sheets': {
-                    'spreadsheet_id': '',
-                    'worksheets': {
-                        'expenses': 'Expenses',
-                        'categories': 'Categories',
-                        'budgets': 'Budgets',
-                        'summary': 'Summary'
+                "app": {
+                    "name": "Spending Tracker GUI",
+                    "version": "1.0.0",
+                    "debug": False,
+                    "window": {
+                        "title": "Spending Tracker",
+                        "width": 1200,
+                        "height": 800,
+                        "resizable": True,
                     },
-                    'credentials_file': 'config/credentials.json',
-                    'token_file': 'config/token.json'
                 },
-                'data': {
-                    'default_categories': [
-                        'Food & Dining', 'Transportation', 'Shopping', 
-                        'Entertainment', 'Bills & Utilities', 'Healthcare', 
-                        'Travel', 'Income', 'Salary', 'Gift', 'Refund', 'Other'
+                "google_sheets": {
+                    "spreadsheet_id": "",
+                    "worksheets": {
+                        "expenses": "Expenses",
+                        "categories": "Categories",
+                        "budgets": "Budgets",
+                        "summary": "Summary",
+                    },
+                    "credentials_file": "config/credentials.json",
+                    "token_file": "config/token.json",
+                },
+                "data": {
+                    "default_categories": [
+                        "Food & Dining",
+                        "Transportation",
+                        "Shopping",
+                        "Entertainment",
+                        "Bills & Utilities",
+                        "Healthcare",
+                        "Travel",
+                        "Income",
+                        "Salary",
+                        "Gift",
+                        "Refund",
+                        "Other",
                     ],
-                    'date_format': '%Y-%m-%d',
-                    'currency': {
-                        'symbol': '£',
-                        'code': 'GBP',
-                        'decimal_places': 2
-                    },
-                    'available_currencies': [
-                        {'symbol': '£', 'code': 'GBP', 'name': 'British Pound'},
-                        {'symbol': '$', 'code': 'USD', 'name': 'US Dollar'},
-                        {'symbol': '€', 'code': 'EUR', 'name': 'Euro'},
-                        {'symbol': '¥', 'code': 'JPY', 'name': 'Japanese Yen'},
-                        {'symbol': 'C$', 'code': 'CAD', 'name': 'Canadian Dollar'},
-                        {'symbol': 'A$', 'code': 'AUD', 'name': 'Australian Dollar'},
-                        {'symbol': '₹', 'code': 'INR', 'name': 'Indian Rupee'},
-                        {'symbol': '¥', 'code': 'CNY', 'name': 'Chinese Yuan'}
+                    "date_format": "%Y-%m-%d",
+                    "currency": {"symbol": "£", "code": "GBP", "decimal_places": 2},
+                    "available_currencies": [
+                        {"symbol": "£", "code": "GBP", "name": "British Pound"},
+                        {"symbol": "$", "code": "USD", "name": "US Dollar"},
+                        {"symbol": "€", "code": "EUR", "name": "Euro"},
+                        {"symbol": "¥", "code": "JPY", "name": "Japanese Yen"},
+                        {"symbol": "C$", "code": "CAD", "name": "Canadian Dollar"},
+                        {"symbol": "A$", "code": "AUD", "name": "Australian Dollar"},
+                        {"symbol": "₹", "code": "INR", "name": "Indian Rupee"},
+                        {"symbol": "¥", "code": "CNY", "name": "Chinese Yuan"},
                     ],
-                    'recurring_expenses': []
+                    "recurring_expenses": [],
                 },
-                'ui': {
-                    'theme': 'light',
-                    'colors': {
-                        'primary': '#007acc',
-                        'secondary': '#f5f5f5',
-                        'success': '#28a745',
-                        'warning': '#ffc107',
-                        'danger': '#dc3545'
+                "ui": {
+                    "theme": "light",
+                    "colors": {
+                        "primary": "#007acc",
+                        "secondary": "#f5f5f5",
+                        "success": "#28a745",
+                        "warning": "#ffc107",
+                        "danger": "#dc3545",
                     },
-                    'charts': {
-                        'default_type': 'pie',
-                        'animation': True
-                    }
+                    "charts": {"default_type": "pie", "animation": True},
                 },
-                'backup': {
-                    'enabled': True,
-                    'frequency': 'daily',
-                    'local_backup_dir': 'backups/',
-                    'max_backups': 30
+                "backup": {
+                    "enabled": True,
+                    "frequency": "daily",
+                    "local_backup_dir": "backups/",
+                    "max_backups": 30,
                 },
-                'email': {
-                    'smtp_server': '',
-                    'smtp_port': 587,
-                    'username': '',
-                    'password': '',
-                    'use_tls': True,
-                    'from_email': '',
-                    'from_name': 'Spending Tracker',
-                    'recipients': [],
-                    'schedule': {
-                        'enabled': False,
-                        'send_monthly': True,
-                        'day_of_month': 1,
-                        'hour': 9,
-                        'minute': 0,
-                        'subject_prefix': '[Monthly Report] ',
-                        'include_csv_attachment': True
+                "email": {
+                    "smtp_server": "",
+                    "smtp_port": 587,
+                    "username": "",
+                    "password": "",
+                    "use_tls": True,
+                    "from_email": "",
+                    "from_name": "Spending Tracker",
+                    "recipients": [],
+                    "schedule": {
+                        "enabled": False,
+                        "send_monthly": True,
+                        "day_of_month": 1,
+                        "hour": 9,
+                        "minute": 0,
+                        "subject_prefix": "[Monthly Report] ",
+                        "include_csv_attachment": True,
                     },
-                    'templates': {
-                        'monthly_subject': 'Monthly Spending Summary - {start_date} to {end_date}',
-                        'include_category_breakdown': True,
-                        'include_recent_expenses': True,
-                        'recent_expenses_limit': 20
-                    }
-                }
+                    "templates": {
+                        "monthly_subject": "Monthly Spending Summary - {start_date} to {end_date}",
+                        "include_category_breakdown": True,
+                        "include_recent_expenses": True,
+                        "recent_expenses_limit": 20,
+                    },
+                },
             }
-            
+
             # Save the reset configuration
-            with open(self.config_manager.config_path, 'w', encoding='utf-8') as file:
-                yaml.dump(default_config, file, default_flow_style=False, sort_keys=False)
-            
+            with open(self.config_manager.config_path, "w", encoding="utf-8") as file:
+                yaml.dump(
+                    default_config, file, default_flow_style=False, sort_keys=False
+                )
+
             # 3. Reload configuration and UI
             self.config_manager.reload_config()
             self.config = self.config_manager.get_config()
-            
+
             # 4. Reset UI elements to defaults
-            self.spreadsheet_id_edit.setText('')
-            self.amount_spin.setPrefix('£')
-            
+            self.spreadsheet_id_edit.setText("")
+            self.amount_spin.setPrefix("£")
+
             # 5. Refresh all data displays
             self.refresh_data()
             self.load_currencies()
             self.refresh_google_sheets_status()
-            
+
             # 6. Show completion message
             QMessageBox.information(
                 self,
@@ -1371,18 +1387,20 @@ class SpendingTrackerMainWindow(QMainWindow):
                 "• Settings reset to defaults\n"
                 "• Currency reset to £ (GBP)\n"
                 "• Email configuration cleared\n\n"
-                "The app is now in a fresh, clean state."
+                "The app is now in a fresh, clean state.",
             )
-            
-            self.show_success_feedback("✅ Factory reset completed - app returned to fresh state")
-            
+
+            self.show_success_feedback(
+                "✅ Factory reset completed - app returned to fresh state"
+            )
+
         except Exception as e:
             QMessageBox.critical(
                 self,
                 "Factory Reset Failed",
                 f"❌ Factory reset failed:\n{str(e)}\n\n"
                 "The application may be in an inconsistent state. "
-                "Please restart the application."
+                "Please restart the application.",
             )
 
     def export_csv(self):
@@ -1495,7 +1513,6 @@ class SpendingTrackerMainWindow(QMainWindow):
         self.status_bar.setStyleSheet(original_style)
         self.status_bar.showMessage("Ready")
 
-
     def load_spreadsheet_id(self):
         """Load the saved spreadsheet ID from configuration into the UI field."""
         try:
@@ -1602,7 +1619,6 @@ class SpendingTrackerMainWindow(QMainWindow):
 
         except Exception as e:
             QMessageBox.warning(self, "Error", f"Failed to open setup guide: {e}")
-
 
     def check_and_process_recurring_credit(self):
         """Check if recurring credit should be processed automatically."""
@@ -1997,7 +2013,7 @@ class SpendingTrackerMainWindow(QMainWindow):
 
         date_obj = datetime.strptime(expense.date, "%Y-%m-%d")
         self.date_edit.setDate(QDate(date_obj.year, date_obj.month, date_obj.day))
-        
+
         # Set amount and credit checkbox based on whether it's negative (credit) or positive (expense)
         if expense.amount < 0:
             self.amount_spin.setValue(-expense.amount)  # Make positive for display
@@ -2005,7 +2021,7 @@ class SpendingTrackerMainWindow(QMainWindow):
         else:
             self.amount_spin.setValue(expense.amount)
             self.credit_checkbox.setChecked(False)
-            
+
         self.category_combo.setCurrentText(expense.category)
         self.description_edit.setText(expense.description)
         self.recurring_expense_checkbox.setChecked(
@@ -2030,13 +2046,15 @@ class SpendingTrackerMainWindow(QMainWindow):
         self.smtp_server_edit.setText(email_config.get("smtp_server", ""))
         self.smtp_port_spin.setValue(email_config.get("smtp_port", 587))
         self.email_username_edit.setText(email_config.get("username", ""))
-        
+
         # Load password and trigger validation
         password = email_config.get("password", "")
         self.email_password_edit.setText(password)
         if password:  # Only validate if password exists
-            self.validate_password(password.replace(' ', ''))  # Validate cleaned password
-        
+            self.validate_password(
+                password.replace(" ", "")
+            )  # Validate cleaned password
+
         self.from_name_edit.setText(email_config.get("from_name", "Spending Tracker"))
         self.use_tls_checkbox.setChecked(email_config.get("use_tls", True))
 
@@ -2275,61 +2293,70 @@ class SpendingTrackerMainWindow(QMainWindow):
             # Check if email scheduling is enabled
             email_config = self.config.get("email", {})
             schedule_config = email_config.get("schedule", {})
-            
+
             if schedule_config.get("enabled", False):
                 # Only start if we have basic email configuration
                 smtp_server = email_config.get("smtp_server", "")
                 username = email_config.get("username", "")
                 password = email_config.get("password", "")
                 recipients = email_config.get("recipients", [])
-                
+
                 if smtp_server and username and password and recipients:
                     # Start the scheduler
                     if self.email_scheduler.start_scheduler():
                         # Small delay to ensure scheduler thread has started
                         import time
+
                         time.sleep(0.2)
-                        
+
                         # Force update the email status after startup
                         from PySide6.QtCore import QTimer
+
                         QTimer.singleShot(1000, self.update_email_status)
-                        QTimer.singleShot(3000, self.update_email_status)  # Again after 3 seconds
-                        
+                        QTimer.singleShot(
+                            3000, self.update_email_status
+                        )  # Again after 3 seconds
+
                         # Show success in status bar
                         next_time = self.email_scheduler.get_next_scheduled_time()
                         if next_time:
-                            QTimer.singleShot(500, lambda: self.status_bar.showMessage(
-                                f"📧 Email scheduler started - Next report: {next_time}"
-                            ))
+                            QTimer.singleShot(
+                                500,
+                                lambda: self.status_bar.showMessage(
+                                    f"📧 Email scheduler started - Next report: {next_time}"
+                                ),
+                            )
         except Exception as e:
             print(f"Error starting email scheduler on launch: {e}")
 
     def on_password_text_changed(self, text):
         """Handle password text changes with validation and auto-formatting."""
         # Don't process if we're already updating to prevent recursion
-        if hasattr(self, '_updating_password') and self._updating_password:
+        if hasattr(self, "_updating_password") and self._updating_password:
             return
-            
+
         self._updating_password = True
-        
+
         # Store cursor position
         cursor_pos = self.email_password_edit.cursorPosition()
-        
+
         # Remove spaces automatically
-        cleaned_text = text.replace(' ', '')
-        
+        cleaned_text = text.replace(" ", "")
+
         # Only update if text changed (to avoid infinite loop)
         if cleaned_text != text:
             self.email_password_edit.setText(cleaned_text)
             # Restore cursor position, adjusting for removed spaces
-            new_pos = min(cursor_pos - (len(text) - len(cleaned_text)), len(cleaned_text))
+            new_pos = min(
+                cursor_pos - (len(text) - len(cleaned_text)), len(cleaned_text)
+            )
             self.email_password_edit.setCursorPosition(max(0, new_pos))
-        
+
         # Validate password format
         self.validate_password(cleaned_text)
-        
+
         self._updating_password = False
-    
+
     def validate_password(self, password):
         """Validate the password format and show status."""
         if not password:
@@ -2338,35 +2365,51 @@ class SpendingTrackerMainWindow(QMainWindow):
             self.password_status_label.setToolTip("")
             self.email_password_edit.setStyleSheet("")
             return
-        
+
         # Check if it's alphanumeric (typical for app passwords)
         is_alphanumeric = password.isalnum()
-        
+
         if len(password) == 16 and is_alphanumeric:
             # Valid app password format
             self.password_status_label.setText("✅")
-            self.password_status_label.setToolTip("Valid app password format (16 alphanumeric characters)")
-            self.password_status_label.setStyleSheet("color: #28a745; font-weight: bold;")
+            self.password_status_label.setToolTip(
+                "Valid app password format (16 alphanumeric characters)"
+            )
+            self.password_status_label.setStyleSheet(
+                "color: #28a745; font-weight: bold;"
+            )
             self.email_password_edit.setStyleSheet("border: 2px solid #28a745;")
         elif len(password) == 16 and not is_alphanumeric:
             # 16 characters but contains special characters
             self.password_status_label.setText("⚠️")
-            self.password_status_label.setToolTip("16 characters but contains non-alphanumeric characters.\nApp passwords are typically alphanumeric only.")
-            self.password_status_label.setStyleSheet("color: #ffc107; font-weight: bold;")
+            self.password_status_label.setToolTip(
+                "16 characters but contains non-alphanumeric characters.\nApp passwords are typically alphanumeric only."
+            )
+            self.password_status_label.setStyleSheet(
+                "color: #ffc107; font-weight: bold;"
+            )
             self.email_password_edit.setStyleSheet("border: 2px solid #ffc107;")
         elif len(password) < 16:
             # Too short
             self.password_status_label.setText("❌")
-            self.password_status_label.setToolTip(f"Too short: {len(password)}/16 characters. App passwords should be 16 characters.")
-            self.password_status_label.setStyleSheet("color: #dc3545; font-weight: bold;")
+            self.password_status_label.setToolTip(
+                f"Too short: {len(password)}/16 characters. App passwords should be 16 characters."
+            )
+            self.password_status_label.setStyleSheet(
+                "color: #dc3545; font-weight: bold;"
+            )
             self.email_password_edit.setStyleSheet("border: 2px solid #dc3545;")
         else:
             # Too long
             self.password_status_label.setText("❌")
-            self.password_status_label.setToolTip(f"Too long: {len(password)} characters. App passwords should be exactly 16 characters.")
-            self.password_status_label.setStyleSheet("color: #dc3545; font-weight: bold;")
+            self.password_status_label.setToolTip(
+                f"Too long: {len(password)} characters. App passwords should be exactly 16 characters."
+            )
+            self.password_status_label.setStyleSheet(
+                "color: #dc3545; font-weight: bold;"
+            )
             self.email_password_edit.setStyleSheet("border: 2px solid #dc3545;")
-    
+
     def toggle_password_visibility(self):
         """Toggle between showing and hiding the password."""
         if self.email_password_edit.echoMode() == QLineEdit.Password:
@@ -2377,7 +2420,7 @@ class SpendingTrackerMainWindow(QMainWindow):
         else:
             # Hide password
             self.email_password_edit.setEchoMode(QLineEdit.Password)
-            self.password_toggle_btn.setText("👁")   # Eye open
+            self.password_toggle_btn.setText("👁")  # Eye open
             self.password_toggle_btn.setToolTip("Click to show password")
 
     def closeEvent(self, event):
@@ -2398,7 +2441,7 @@ class SpendingTrackerMainWindow(QMainWindow):
                     print("Email scheduler stopped")
             except Exception as e:
                 print(f"Warning: Failed to stop email scheduler: {e}")
-            
+
             event.accept()
         else:
             event.ignore()

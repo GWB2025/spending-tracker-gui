@@ -301,7 +301,9 @@ class ExpenseController:
         now = datetime.now()
         this_month_expenses = ExpenseFilter.by_month(expenses, now.year, now.month)
         this_month_income = ExpenseAggregator.total_income_only(this_month_expenses)
-        this_month_expenses_amount = abs(ExpenseAggregator.total_expenses_only(this_month_expenses))
+        this_month_expenses_amount = abs(
+            ExpenseAggregator.total_expenses_only(this_month_expenses)
+        )
         this_month_balance = ExpenseAggregator.total_amount(this_month_expenses)
 
         # Last month calculations
@@ -310,7 +312,9 @@ class ExpenseController:
             expenses, last_month.year, last_month.month
         )
         last_month_income = ExpenseAggregator.total_income_only(last_month_transactions)
-        last_month_expenses_amount = abs(ExpenseAggregator.total_expenses_only(last_month_transactions))
+        last_month_expenses_amount = abs(
+            ExpenseAggregator.total_expenses_only(last_month_transactions)
+        )
         last_month_balance = ExpenseAggregator.total_amount(last_month_transactions)
 
         # Category breakdown
@@ -369,15 +373,23 @@ class ExpenseController:
         # Get just the expenses (negative amounts) for this analysis
         now = datetime.now()
         this_month_expenses = ExpenseFilter.by_month(expenses, now.year, now.month)
-        this_month_spending = ExpenseAggregator.total_spending_absolute(this_month_expenses)
-        
+        this_month_spending = ExpenseAggregator.total_spending_absolute(
+            this_month_expenses
+        )
+
         last_month_date = now.replace(day=1) - timedelta(days=1)
-        last_month_expenses = ExpenseFilter.by_month(expenses, last_month_date.year, last_month_date.month)
-        last_month_spending = ExpenseAggregator.total_spending_absolute(last_month_expenses)
-        
+        last_month_expenses = ExpenseFilter.by_month(
+            expenses, last_month_date.year, last_month_date.month
+        )
+        last_month_spending = ExpenseAggregator.total_spending_absolute(
+            last_month_expenses
+        )
+
         # Month-over-month spending comparison
         if last_month_spending > 0:
-            change = ((this_month_spending - last_month_spending) / last_month_spending) * 100
+            change = (
+                (this_month_spending - last_month_spending) / last_month_spending
+            ) * 100
             if change > 20:
                 insights.append(f"📈 Spending increased {change:.1f}% from last month")
             elif change < -20:
@@ -388,8 +400,10 @@ class ExpenseController:
         # Category insights - focus on spending categories (negative amounts)
         if category_totals:
             # Filter to only expense categories (negative totals)
-            expense_categories = {k: abs(v) for k, v in category_totals.items() if v < 0}
-            
+            expense_categories = {
+                k: abs(v) for k, v in category_totals.items() if v < 0
+            }
+
             if expense_categories:
                 sorted_expense_categories = sorted(
                     expense_categories.items(), key=lambda x: x[1], reverse=True
@@ -410,7 +424,9 @@ class ExpenseController:
 
                 # Balanced spending analysis
                 if len(sorted_expense_categories) >= 3:
-                    top_three_total = sum(amount for _, amount in sorted_expense_categories[:3])
+                    top_three_total = sum(
+                        amount for _, amount in sorted_expense_categories[:3]
+                    )
                     total_expenses = sum(expense_categories.values())
                     top_three_percentage = (
                         (top_three_total / total_expenses) * 100
