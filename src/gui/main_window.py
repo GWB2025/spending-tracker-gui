@@ -878,14 +878,17 @@ class SpendingTrackerMainWindow(QMainWindow):
                 # If recurring expense, save it to recurring expenses list
                 if is_recurring:
                     self.save_recurring_expense(date, amount, category, description)
-                
+
                 # Auto-sync to Google Sheets if not using mock data
                 if not self.use_mock_data:
                     self.add_expense_btn.setText("Syncing...")
                     sync_result = self.expense_controller.sync_data()
                     if not sync_result["success"]:
                         # Show sync warning but don't fail the transaction
-                        self.status_bar.showMessage(f"⚠️ Transaction saved but sync failed: {sync_result['message']}")
+                        self.status_bar.showMessage(
+                            f"⚠️ Transaction saved but sync failed: "
+                            f"{sync_result['message']}"
+                        )
 
                 # Show success feedback
                 transaction_type = "Credit" if is_credit else "Expense"
@@ -1961,8 +1964,11 @@ class SpendingTrackerMainWindow(QMainWindow):
                     sync_result = self.expense_controller.sync_data()
                     if not sync_result["success"]:
                         # Show sync warning but don't fail the update
-                        self.status_bar.showMessage(f"⚠️ Transaction updated but sync failed: {sync_result['message']}")
-                
+                        self.status_bar.showMessage(
+                            f"⚠️ Transaction updated but sync failed: "
+                            f"{sync_result['message']}"
+                        )
+
                 success_msg = f"✅ {message}"
                 if not self.use_mock_data:
                     success_msg += " and synced to Google Sheets"
@@ -2011,8 +2017,11 @@ class SpendingTrackerMainWindow(QMainWindow):
                     sync_result = self.expense_controller.sync_data()
                     if not sync_result["success"]:
                         # Show sync warning but don't fail the deletion
-                        self.status_bar.showMessage(f"⚠️ Transaction deleted but sync failed: {sync_result['message']}")
-                
+                        self.status_bar.showMessage(
+                            f"⚠️ Transaction deleted but sync failed: "
+                            f"{sync_result['message']}"
+                        )
+
                 success_msg = f"✅ {message}"
                 if not self.use_mock_data:
                     success_msg += " and synced to Google Sheets"

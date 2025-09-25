@@ -223,7 +223,7 @@ class GoogleSheetsService:
         except Exception as e:
             print(f"Error adding expense: {e}")
             return False
-    
+
     def update_expense(
         self,
         old_expense: Dict[str, Any],
@@ -234,14 +234,14 @@ class GoogleSheetsService:
     ) -> bool:
         """
         Update an existing expense in the spreadsheet.
-        
+
         Args:
             old_expense: The original expense data dictionary
             date: New expense date in YYYY-MM-DD format
             amount: New expense amount
             category: New expense category
             description: New optional description
-            
+
         Returns:
             True if successful, False otherwise.
         """
@@ -251,7 +251,7 @@ class GoogleSheetsService:
                 "expenses", "Expenses"
             )
             worksheet = spreadsheet.worksheet(expenses_sheet_name)
-            
+
             # Extract old expense values, handling both uppercase and lowercase keys
             old_date = old_expense.get("Date") or old_expense.get("date")
             old_amount = old_expense.get("Amount") or old_expense.get("amount")
@@ -259,10 +259,10 @@ class GoogleSheetsService:
             old_description = old_expense.get("Description") or old_expense.get(
                 "description", ""
             )
-            
+
             # Get all records to find the matching row
             all_records = worksheet.get_all_records()
-            
+
             for i, record in enumerate(all_records):
                 if (
                     record.get("Date") == old_date
@@ -270,33 +270,35 @@ class GoogleSheetsService:
                     and record.get("Category") == old_category
                     and record.get("Description") == old_description
                 ):
-                    # Found the matching record, update it (row index + 2 because of header and 1-based indexing)
+                    # Found matching record, update it (row + 2 for header and 1-based)
                     row_num = i + 2
                     created_at = record.get("Created At", datetime.now().isoformat())
-                    
+
                     # Update the row with new values
                     updated_row = [date, amount, category, description, created_at]
                     worksheet.update(f"A{row_num}:E{row_num}", [updated_row])
-                    
+
                     return True
-            
+
             # If we get here, the expense wasn't found
             print(
-                f"Expense not found for update. Looking for: Date={old_date}, Amount={old_amount}, Category={old_category}, Description={old_description}"
+                f"Expense not found for update. Looking for: Date={old_date}, "
+                f"Amount={old_amount}, Category={old_category}, "
+                f"Description={old_description}"
             )
             return False
-            
+
         except Exception as e:
             print(f"Error updating expense: {e}")
             return False
-    
+
     def delete_expense(self, expense: Dict[str, Any]) -> bool:
         """
         Delete an existing expense from the spreadsheet.
-        
+
         Args:
             expense: The expense data dictionary to delete
-            
+
         Returns:
             True if successful, False otherwise.
         """
@@ -306,7 +308,7 @@ class GoogleSheetsService:
                 "expenses", "Expenses"
             )
             worksheet = spreadsheet.worksheet(expenses_sheet_name)
-            
+
             # Extract expense values, handling both uppercase and lowercase keys
             exp_date = expense.get("Date") or expense.get("date")
             exp_amount = expense.get("Amount") or expense.get("amount")
@@ -314,10 +316,10 @@ class GoogleSheetsService:
             exp_description = expense.get("Description") or expense.get(
                 "description", ""
             )
-            
+
             # Get all records to find the matching row
             all_records = worksheet.get_all_records()
-            
+
             for i, record in enumerate(all_records):
                 if (
                     record.get("Date") == exp_date
@@ -325,18 +327,20 @@ class GoogleSheetsService:
                     and record.get("Category") == exp_category
                     and record.get("Description") == exp_description
                 ):
-                    # Found the matching record, delete it (row index + 2 because of header and 1-based indexing)
+                    # Found matching record, delete it (row + 2 for header and 1-based)
                     row_num = i + 2
                     worksheet.delete_rows(row_num)
-                    
+
                     return True
-            
+
             # If we get here, the expense wasn't found
             print(
-                f"Expense not found for deletion. Looking for: Date={exp_date}, Amount={exp_amount}, Category={exp_category}, Description={exp_description}"
+                f"Expense not found for deletion. Looking for: Date={exp_date}, "
+                f"Amount={exp_amount}, Category={exp_category}, "
+                f"Description={exp_description}"
             )
             return False
-            
+
         except Exception as e:
             print(f"Error deleting expense: {e}")
             return False
@@ -443,7 +447,7 @@ class GoogleSheetsService:
     def sync_categories(self) -> bool:
         """
         Synchronize categories to the Categories sheet.
-        
+
         Returns:
             True if successful, False otherwise.
         """
@@ -453,37 +457,37 @@ class GoogleSheetsService:
                 "categories", "Categories"
             )
             worksheet = spreadsheet.worksheet(categories_sheet_name)
-            
+
             # Get unique categories from expenses
             categories = self.get_categories()
-            
+
             # Clear existing data (except headers)
             worksheet.clear()
-            
+
             # Set headers
             headers = ["Category", "Budget", "Color", "Created At"]
             worksheet.append_row(headers)
-            
+
             # Add categories with default values
             for category in categories:
                 row_data = [
                     category,
                     0.0,  # Default budget
-                    "",   # Default color (empty)
-                    datetime.now().isoformat()
+                    "",  # Default color (empty)
+                    datetime.now().isoformat(),
                 ]
                 worksheet.append_row(row_data)
-            
+
             return True
-            
+
         except Exception as e:
             print(f"Error syncing categories: {e}")
             return False
-    
+
     def sync_budgets(self) -> bool:
         """
         Synchronize budget data to the Budgets sheet.
-        
+
         Returns:
             True if successful, False otherwise.
         """
@@ -493,11 +497,11 @@ class GoogleSheetsService:
                 "budgets", "Budgets"
             )
             worksheet = spreadsheet.worksheet(budgets_sheet_name)
-            
+
             # Get expenses to calculate current spending by category
             expenses = self.get_expenses()
             current_month = datetime.now().strftime("%Y-%m")
-            
+
             # Calculate spending by category for current month
             category_spending = {}
             for expense in expenses:
@@ -505,39 +509,47 @@ class GoogleSheetsService:
                     category = expense.get("Category", "")
                     amount = float(expense.get("Amount", 0))
                     if category:
-                        category_spending[category] = category_spending.get(category, 0) + amount
-            
+                        category_spending[category] = (
+                            category_spending.get(category, 0) + amount
+                        )
+
             # Clear existing data (except headers)
             worksheet.clear()
-            
+
             # Set headers
-            headers = ["Category", "Monthly Budget", "Current Spent", "Remaining", "Month"]
+            headers = [
+                "Category",
+                "Monthly Budget",
+                "Current Spent",
+                "Remaining",
+                "Month",
+            ]
             worksheet.append_row(headers)
-            
+
             # Add budget data for each category with spending
             for category, spent in category_spending.items():
                 budget = 0.0  # Default budget - could be enhanced to read from config
                 remaining = budget - spent
-                
+
                 row_data = [
                     category,
                     budget,
                     round(spent, 2),
                     round(remaining, 2),
-                    current_month
+                    current_month,
                 ]
                 worksheet.append_row(row_data)
-            
+
             return True
-            
+
         except Exception as e:
             print(f"Error syncing budgets: {e}")
             return False
-    
+
     def sync_summary(self) -> bool:
         """
         Synchronize summary data to the Summary sheet.
-        
+
         Returns:
             True if successful, False otherwise.
         """
@@ -547,33 +559,48 @@ class GoogleSheetsService:
                 "summary", "Summary"
             )
             worksheet = spreadsheet.worksheet(summary_sheet_name)
-            
+
             # Get summary data
             summary = self.get_spending_summary()
-            
+
             # Clear existing data (except headers)
             worksheet.clear()
-            
+
             # Set headers
             headers = ["Metric", "Value", "Period", "Updated At"]
             worksheet.append_row(headers)
-            
+
             # Add summary metrics
             current_time = datetime.now().isoformat()
             current_month = datetime.now().strftime("%Y-%m")
-            
+
             summary_rows = [
                 ["Total Expenses", summary.get("total", 0), "All Time", current_time],
-                ["This Month", summary.get("this_month", 0), current_month, current_time],
-                ["Daily Average", summary.get("daily_average", 0), "All Time", current_time],
-                ["Transaction Count", summary.get("count", 0), "All Time", current_time]
+                [
+                    "This Month",
+                    summary.get("this_month", 0),
+                    current_month,
+                    current_time,
+                ],
+                [
+                    "Daily Average",
+                    summary.get("daily_average", 0),
+                    "All Time",
+                    current_time,
+                ],
+                [
+                    "Transaction Count",
+                    summary.get("count", 0),
+                    "All Time",
+                    current_time,
+                ],
             ]
-            
+
             for row in summary_rows:
                 worksheet.append_row(row)
-            
+
             return True
-            
+
         except Exception as e:
             print(f"Error syncing summary: {e}")
             return False
@@ -597,19 +624,19 @@ class GoogleSheetsService:
                     "success": False,
                     "message": "Failed to set up spreadsheet structure",
                 }
-            
+
             # Sync all sheet data
             categories_synced = self.sync_categories()
             budgets_synced = self.sync_budgets()
             summary_synced = self.sync_summary()
-            
+
             # Get summary data for response
             summary = self.get_spending_summary()
-            
+
             sync_status = {
                 "categories": categories_synced,
                 "budgets": budgets_synced,
-                "summary": summary_synced
+                "summary": summary_synced,
             }
 
             return {
