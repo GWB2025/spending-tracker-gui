@@ -1,0 +1,63 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Build outputs
+dist/
+build/
+*.exe
+*.app
+*.dmg
+*.pkg
+
+# Credentials and secrets
+*.env
+.env
+credentials.json
+token.json
+client_secret.json
+service_account.json
+config/secrets.json
+config/credentials.json
+config/token.json
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Package files
+*.tar.gz
+*.zip
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+
+# Testing
+.pytest_cache/
+.tox/

@@ -1,0 +1,101 @@
+app:
+  name: Spending Tracker GUI
+  version: 1.0.0
+  debug: false
+  window:
+    title: Spending Tracker
+    width: 1200
+    height: 800
+    resizable: true
+google_sheets:
+  spreadsheet_id: ''
+  worksheets:
+    expenses: Expenses
+    categories: Categories
+    budgets: Budgets
+    summary: Summary
+  credentials_file: config/credentials.json
+  token_file: config/token.json
+data:
+  default_categories:
+  - Food & Dining
+  - Transportation
+  - Shopping
+  - Entertainment
+  - Bills & Utilities
+  - Healthcare
+  - Travel
+  - Income
+  - Salary
+  - Gift
+  - Refund
+  - Other
+  date_format: '%Y-%m-%d'
+  currency:
+    symbol: "\xA3"
+    code: GBP
+    decimal_places: 2
+  available_currencies:
+  - symbol: "\xA3"
+    code: GBP
+    name: British Pound
+  - symbol: $
+    code: USD
+    name: US Dollar
+  - symbol: "\u20AC"
+    code: EUR
+    name: Euro
+  - symbol: "\xA5"
+    code: JPY
+    name: Japanese Yen
+  - symbol: C$
+    code: CAD
+    name: Canadian Dollar
+  - symbol: A$
+    code: AUD
+    name: Australian Dollar
+  - symbol: "\u20B9"
+    code: INR
+    name: Indian Rupee
+  - symbol: "\xA5"
+    code: CNY
+    name: Chinese Yuan
+  recurring_expenses: []
+ui:
+  theme: light
+  colors:
+    primary: '#007acc'
+    secondary: '#f5f5f5'
+    success: '#28a745'
+    warning: '#ffc107'
+    danger: '#dc3545'
+  charts:
+    default_type: pie
+    animation: true
+backup:
+  enabled: true
+  frequency: daily
+  local_backup_dir: backups/
+  max_backups: 30
+email:
+  smtp_server: ''
+  smtp_port: 587
+  username: ''
+  password: ''
+  use_tls: true
+  from_email: ''
+  from_name: Spending Tracker
+  recipients: []
+  schedule:
+    enabled: false
+    send_monthly: true
+    day_of_month: 1
+    hour: 9
+    minute: 0
+    subject_prefix: '[Monthly Report] '
+    include_csv_attachment: true
+  templates:
+    monthly_subject: Monthly Spending Summary - {start_date} to {end_date}
+    include_category_breakdown: true
+    include_recent_expenses: true
+    recent_expenses_limit: 20
