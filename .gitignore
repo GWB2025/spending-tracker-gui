@@ -41,6 +41,9 @@ config/credentials.json
 config/token.json
 config/config.yaml
 
+# Personal data
+data/expenses.json
+
 # Logs
 *.log
 logs/
