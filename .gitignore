@@ -39,6 +39,7 @@ service_account.json
 config/secrets.json
 config/credentials.json
 config/token.json
+config/config.yaml
 
 # Logs
 *.log

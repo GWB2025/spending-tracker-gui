@@ -25,7 +25,7 @@ class ExpenseController:
     """
 
     def __init__(
-        self, config_manager: ConfigManager = None, use_mock_data: bool = True
+        self, config_manager: ConfigManager = None, use_mock_data: bool = False
     ):
         """
         Initialize the expense controller.

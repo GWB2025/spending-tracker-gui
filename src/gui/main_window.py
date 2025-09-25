@@ -52,11 +52,11 @@ class SpendingTrackerMainWindow(QMainWindow):
         self.config_manager = ConfigManager()
         self.config = self.config_manager.get_config()
 
-        # Initialize expense controller
+        # Initialize expense controller (default to Google Sheets)
         self.expense_controller = ExpenseController(
-            self.config_manager, use_mock_data=True
+            self.config_manager, use_mock_data=False
         )
-        self.use_mock_data = True
+        self.use_mock_data = False
 
         # Initialize email services
         self.email_service = EmailService(self.config_manager)
@@ -337,8 +337,8 @@ class SpendingTrackerMainWindow(QMainWindow):
         data_layout.addWidget(self.data_source_combo, 0, 1)
 
         # Status indicator
-        self.connection_status = QLabel("Status: Mock data active")
-        self.connection_status.setStyleSheet("color: #28a745; font-weight: bold;")
+        self.connection_status = QLabel("Status: Google Sheets selected")
+        self.connection_status.setStyleSheet("color: #007acc; font-weight: bold;")
         data_layout.addWidget(self.connection_status, 1, 0, 1, 2)
 
         layout.addWidget(data_group)
@@ -878,12 +878,22 @@ class SpendingTrackerMainWindow(QMainWindow):
                 # If recurring expense, save it to recurring expenses list
                 if is_recurring:
                     self.save_recurring_expense(date, amount, category, description)
+                
+                # Auto-sync to Google Sheets if not using mock data
+                if not self.use_mock_data:
+                    self.add_expense_btn.setText("Syncing...")
+                    sync_result = self.expense_controller.sync_data()
+                    if not sync_result["success"]:
+                        # Show sync warning but don't fail the transaction
+                        self.status_bar.showMessage(f"⚠️ Transaction saved but sync failed: {sync_result['message']}")
 
                 # Show success feedback
                 transaction_type = "Credit" if is_credit else "Expense"
                 feedback_msg = f"✅ {transaction_type} added successfully"
                 if is_recurring:
                     feedback_msg += f" (Saved as recurring {transaction_type.lower()})"
+                if not self.use_mock_data:
+                    feedback_msg += " and synced to Google Sheets"
                 self.show_success_feedback(feedback_msg)
 
                 # Clear form
@@ -1946,7 +1956,17 @@ class SpendingTrackerMainWindow(QMainWindow):
             )
 
             if success:
-                self.show_success_feedback(f"✅ {message}")
+                # Auto-sync to Google Sheets if not using mock data
+                if not self.use_mock_data:
+                    sync_result = self.expense_controller.sync_data()
+                    if not sync_result["success"]:
+                        # Show sync warning but don't fail the update
+                        self.status_bar.showMessage(f"⚠️ Transaction updated but sync failed: {sync_result['message']}")
+                
+                success_msg = f"✅ {message}"
+                if not self.use_mock_data:
+                    success_msg += " and synced to Google Sheets"
+                self.show_success_feedback(success_msg)
                 self.refresh_data()
             else:
                 QMessageBox.warning(self, "Update Failed", f"❌ {message}")
@@ -1986,7 +2006,17 @@ class SpendingTrackerMainWindow(QMainWindow):
             success, message = self.expense_controller.delete_expense(expense)
 
             if success:
-                self.show_success_feedback(f"✅ {message}")
+                # Auto-sync to Google Sheets if not using mock data
+                if not self.use_mock_data:
+                    sync_result = self.expense_controller.sync_data()
+                    if not sync_result["success"]:
+                        # Show sync warning but don't fail the deletion
+                        self.status_bar.showMessage(f"⚠️ Transaction deleted but sync failed: {sync_result['message']}")
+                
+                success_msg = f"✅ {message}"
+                if not self.use_mock_data:
+                    success_msg += " and synced to Google Sheets"
+                self.show_success_feedback(success_msg)
                 self.refresh_data()
             else:
                 QMessageBox.warning(self, "Delete Failed", f"❌ {message}")

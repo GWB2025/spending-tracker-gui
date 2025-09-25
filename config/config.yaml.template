@@ -5,10 +5,10 @@ app:
   window:
     title: Spending Tracker
     width: 1200
-    height: 800
+    height: 600
     resizable: true
 google_sheets:
-  spreadsheet_id: ''
+  spreadsheet_id: ""  # Enter your Google Sheets ID here
   worksheets:
     expenses: Expenses
     categories: Categories
@@ -32,20 +32,20 @@ data:
   - Other
   date_format: '%Y-%m-%d'
   currency:
-    symbol: "\xA3"
+    symbol: "£"
     code: GBP
     decimal_places: 2
   available_currencies:
-  - symbol: "\xA3"
+  - symbol: "£"
     code: GBP
     name: British Pound
   - symbol: $
     code: USD
     name: US Dollar
-  - symbol: "\u20AC"
+  - symbol: "€"
     code: EUR
     name: Euro
-  - symbol: "\xA5"
+  - symbol: "¥"
     code: JPY
     name: Japanese Yen
   - symbol: C$
@@ -54,13 +54,13 @@ data:
   - symbol: A$
     code: AUD
     name: Australian Dollar
-  - symbol: "\u20B9"
+  - symbol: "₹"
     code: INR
     name: Indian Rupee
-  - symbol: "\xA5"
+  - symbol: "¥"
     code: CNY
     name: Chinese Yuan
-  recurring_expenses: []
+  recurring_expenses: []  # Recurring expenses will be added here
 ui:
   theme: light
   colors:
@@ -78,17 +78,17 @@ backup:
   local_backup_dir: backups/
   max_backups: 30
 email:
-  smtp_server: ''
+  smtp_server: smtp.gmail.com
   smtp_port: 587
-  username: ''
-  password: ''
+  username: ""  # Enter your email address
+  password: ""  # Enter your app password (not regular Gmail password)
   use_tls: true
-  from_email: ''
+  from_email: ""  # Enter your from email
   from_name: Spending Tracker
-  recipients: []
+  recipients: []  # Add recipient email addresses
   schedule:
     enabled: false
-    send_monthly: true
+    send_monthly: false
     day_of_month: 1
     hour: 9
     minute: 0
