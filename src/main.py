@@ -19,10 +19,10 @@ from src.gui.main_window import main as run_gui
 def main():
     """Main application entry point."""
     # If running windowless (pythonw), redirect stdout/stderr to avoid issues
-    if not sys.stdout.isatty() or 'pythonw' in sys.executable.lower():
+    if not sys.stdout.isatty() or "pythonw" in sys.executable.lower():
         # Redirect to null device for windowless operation
-        sys.stdout = open(os.devnull, 'w')
-        sys.stderr = open(os.devnull, 'w')
+        sys.stdout = open(os.devnull, "w")
+        sys.stderr = open(os.devnull, "w")
     else:
         print("Starting Spending Tracker GUI...")
 

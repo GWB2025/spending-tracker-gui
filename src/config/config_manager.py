@@ -41,7 +41,7 @@ class ConfigManager:
         if self._config is None or self._config_needs_reload():
             self._load_config()
         return self._config
-    
+
     def _config_needs_reload(self) -> bool:
         """Check if config needs to be reloaded based on file modification time."""
         try:
@@ -55,7 +55,7 @@ class ConfigManager:
         try:
             # Track modification time for caching
             self._last_modified = os.path.getmtime(self.config_path)
-            
+
             with open(self.config_path, "r", encoding="utf-8") as file:
                 self._config = yaml.safe_load(file)
         except FileNotFoundError:
