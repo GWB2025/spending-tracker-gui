@@ -68,19 +68,42 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
+        python -m pip --version
+        echo "Installing dependencies from requirements.txt..."
         pip install -r requirements.txt
+        echo "Dependencies installed successfully"
     
-    - name: Setup test configuration
+    - name: Setup test configuration (Unix)
+      if: runner.os != 'Windows'
       run: |
-        # Copy template files for testing
-        if [ "$RUNNER_OS" = "Windows" ]; then
-          copy config\config.yaml.template config\config.yaml
-          copy config\credentials.json.template config\credentials.json
+        cp config/config.yaml.template config/config.yaml
+        cp config/credentials.json.template config/credentials.json
+        echo "Configuration files set up successfully (Unix)"
+    
+    - name: Setup test configuration (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        copy config\config.yaml.template config\config.yaml
+        copy config\credentials.json.template config\credentials.json
+        echo "Configuration files set up successfully (Windows)"
+      shell: cmd
+    
+    - name: Verify configuration setup
+      run: |
+        echo "Verifying configuration files were created..."
+        if [ -f "config/config.yaml" ]; then
+          echo "✓ config.yaml exists"
+          echo "First line:" && head -n 1 config/config.yaml
         else
-          cp config/config.yaml.template config/config.yaml
-          cp config/credentials.json.template config/credentials.json
+          echo "✗ config.yaml missing"
+          exit 1
         fi
-        echo "Configuration files set up successfully"
+        if [ -f "config/credentials.json" ]; then
+          echo "✓ credentials.json exists"
+        else
+          echo "✗ credentials.json missing"
+          exit 1
+        fi
       shell: bash
     
     - name: Test import and basic functionality
@@ -88,8 +111,9 @@ jobs:
         # Set up virtual display for Linux
         if [ "$RUNNER_OS" = "Linux" ]; then
           export DISPLAY=:99
-          Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
-          sleep 3
+          Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 & 
+          sleep 5
+          echo "Virtual display started on :99"
         fi
         
         # Test basic imports
@@ -98,15 +122,9 @@ jobs:
         python -c "from src.models.expense import Expense; print('Expense model imports successfully')"
         python -c "from src.controllers.expense_controller import ExpenseController; print('Expense controller imports successfully')"
         
-        # Test GUI imports with error handling
-        python -c "try:
-          import os
-          os.environ['QT_QPA_PLATFORM'] = 'offscreen'
-          from src.gui.main_window import main
-          print('GUI imports successfully')
-        except Exception as e:
-          print(f'GUI import failed (expected in CI): {e}')
-          print('This is normal for headless CI environments')"
+        # Test GUI imports with error handling (simplified for CI)
+        python -c "import os; os.environ['QT_QPA_PLATFORM'] = 'offscreen'; print('QT platform set')"
+        python -c "try: from src.gui.main_window import main; print('GUI imports successfully'); except Exception as e: print('GUI import failed (expected in CI):', str(e))"
       shell: bash
     
     - name: Test configuration loading
