@@ -6,6 +6,7 @@ A desktop GUI application for tracking personal spending using Google Sheets.
 """
 
 import sys
+import os
 from pathlib import Path
 
 # Add the project root to the Python path
@@ -17,7 +18,13 @@ from src.gui.main_window import main as run_gui
 
 def main():
     """Main application entry point."""
-    print("Starting Spending Tracker GUI...")
+    # If running windowless (pythonw), redirect stdout/stderr to avoid issues
+    if not sys.stdout.isatty() or 'pythonw' in sys.executable.lower():
+        # Redirect to null device for windowless operation
+        sys.stdout = open(os.devnull, 'w')
+        sys.stderr = open(os.devnull, 'w')
+    else:
+        print("Starting Spending Tracker GUI...")
 
     try:
         # Launch the PySide6 GUI

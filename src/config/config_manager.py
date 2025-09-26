@@ -6,6 +6,7 @@ This module handles loading and managing configuration from YAML files.
 """
 
 import yaml
+import os
 from pathlib import Path
 from typing import Dict, Any
 
@@ -27,6 +28,7 @@ class ConfigManager:
 
         self.config_path = Path(config_path)
         self._config = None
+        self._last_modified = None
 
     def get_config(self) -> Dict[str, Any]:
         """
@@ -35,19 +37,33 @@ class ConfigManager:
         Returns:
             Dictionary containing the full configuration.
         """
-        if self._config is None:
+        # Check if we need to reload the config
+        if self._config is None or self._config_needs_reload():
             self._load_config()
         return self._config
+    
+    def _config_needs_reload(self) -> bool:
+        """Check if config needs to be reloaded based on file modification time."""
+        try:
+            current_modified = os.path.getmtime(self.config_path)
+            return self._last_modified != current_modified
+        except (OSError, FileNotFoundError):
+            return True
 
     def _load_config(self):
         """Load configuration from the YAML file."""
         try:
+            # Track modification time for caching
+            self._last_modified = os.path.getmtime(self.config_path)
+            
             with open(self.config_path, "r", encoding="utf-8") as file:
                 self._config = yaml.safe_load(file)
         except FileNotFoundError:
             raise FileNotFoundError(f"Configuration file not found: {self.config_path}")
         except yaml.YAMLError as e:
             raise ValueError(f"Error parsing configuration file: {e}")
+        except OSError as e:
+            raise OSError(f"Error reading configuration file: {e}")
 
     def reload_config(self):
         """Reload the configuration from file."""

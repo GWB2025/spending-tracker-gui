@@ -7,41 +7,20 @@ This module contains the main application window and primary UI components.
 
 import sys
 from pathlib import Path
+
+# Essential Qt imports for main window - other widgets imported as needed
 from PySide6.QtWidgets import (
-    QApplication,
-    QMainWindow,
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QTabWidget,
-    QPushButton,
-    QLabel,
-    QLineEdit,
-    QComboBox,
-    QDateEdit,
-    QDoubleSpinBox,
-    QTableWidget,
-    QTableWidgetItem,
-    QGroupBox,
-    QGridLayout,
-    QMessageBox,
-    QStatusBar,
-    QCheckBox,
-    QSpinBox,
-    QMenu,
-    QDialog,
-    QListWidget,
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QTabWidget, QStatusBar,
+    QTableWidget, QTableWidgetItem, QDateEdit, QLabel, QMessageBox  # Common widgets used across methods
 )
-from PySide6.QtCore import Qt, QDate
+from PySide6.QtCore import Qt, QDate, QTimer
 
 # Add project root to path for imports
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
+# Import only essential components immediately
 from src.config.config_manager import ConfigManager
-from src.controllers.expense_controller import ExpenseController
-from src.services.email_service import EmailService
-from src.services.email_scheduler import EmailScheduler
 
 
 class SpendingTrackerMainWindow(QMainWindow):
@@ -52,27 +31,20 @@ class SpendingTrackerMainWindow(QMainWindow):
         self.config_manager = ConfigManager()
         self.config = self.config_manager.get_config()
 
-        # Initialize expense controller (default to Google Sheets)
-        self.expense_controller = ExpenseController(
-            self.config_manager, use_mock_data=False
-        )
+        # Lazy-loaded components (initialized when needed)
+        self._expense_controller = None
+        self._email_service = None
+        self._email_scheduler = None
         self.use_mock_data = False
 
-        # Initialize email services
-        self.email_service = EmailService(self.config_manager)
-        self.email_scheduler = EmailScheduler(
-            self.config_manager, self.expense_controller
-        )
-
+        # Initialize UI first for fast display
         self.init_ui()
-        self.setup_connections()
-        self.load_initial_data()
-
-        # Start email scheduler if enabled
-        self.start_email_scheduler_on_launch()
-
-        # Connect tab change event to update email status when Email tab is selected
-        self.tab_widget.currentChanged.connect(self.on_tab_changed)
+        
+        # Defer heavy initialization to after UI is shown
+        self.initialization_timer = QTimer()
+        self.initialization_timer.setSingleShot(True)
+        self.initialization_timer.timeout.connect(self._complete_initialization)
+        self.initialization_timer.start(100)  # Initialize after 100ms
 
     def init_ui(self):
         """Initialize the user interface."""
@@ -111,6 +83,12 @@ class SpendingTrackerMainWindow(QMainWindow):
 
     def create_expense_entry_tab(self):
         """Create the expense entry tab."""
+        # Import widgets only when creating this tab
+        from PySide6.QtWidgets import (
+            QHBoxLayout, QGroupBox, QGridLayout, QLabel, QDateEdit,
+            QDoubleSpinBox, QComboBox, QLineEdit, QCheckBox, QPushButton
+        )
+        
         expense_tab = QWidget()
         layout = QVBoxLayout(expense_tab)
 
@@ -203,6 +181,11 @@ class SpendingTrackerMainWindow(QMainWindow):
 
     def create_expense_list_tab(self):
         """Create the expense list tab."""
+        # Import widgets only when creating this tab
+        from PySide6.QtWidgets import (
+            QHBoxLayout, QTableWidget, QPushButton, QGroupBox
+        )
+        
         list_tab = QWidget()
         layout = QVBoxLayout(list_tab)
 
@@ -217,6 +200,10 @@ class SpendingTrackerMainWindow(QMainWindow):
             "Export all your expenses to a CSV file that can be opened in Excel or other spreadsheet applications."
         )
 
+        # Connect buttons to methods
+        refresh_btn.clicked.connect(self.refresh_data)
+        export_btn.clicked.connect(self.export_csv)
+        
         controls_layout.addWidget(refresh_btn)
         controls_layout.addWidget(export_btn)
         controls_layout.addStretch()
@@ -254,6 +241,9 @@ class SpendingTrackerMainWindow(QMainWindow):
 
     def create_summary_tab(self):
         """Create the summary/dashboard tab."""
+        # Import widgets only when creating this tab
+        from PySide6.QtWidgets import QHBoxLayout, QGroupBox, QLabel
+        
         summary_tab = QWidget()
         layout = QVBoxLayout(summary_tab)
 
@@ -320,6 +310,12 @@ class SpendingTrackerMainWindow(QMainWindow):
 
     def create_settings_tab(self):
         """Create the settings tab."""
+        # Import widgets only when creating this tab
+        from PySide6.QtWidgets import (
+            QGridLayout, QGroupBox, QLabel, QComboBox, 
+            QPushButton, QLineEdit, QSpinBox
+        )
+        
         settings_tab = QWidget()
         layout = QVBoxLayout(settings_tab)
 
@@ -508,6 +504,12 @@ class SpendingTrackerMainWindow(QMainWindow):
 
     def create_email_settings_tab(self):
         """Create the email settings tab."""
+        # Import widgets only when creating this tab
+        from PySide6.QtWidgets import (
+            QGridLayout, QGroupBox, QLabel, QLineEdit, QSpinBox,
+            QPushButton, QHBoxLayout, QCheckBox, QListWidget
+        )
+        
         email_tab = QWidget()
         layout = QVBoxLayout(email_tab)
 
@@ -1041,7 +1043,24 @@ class SpendingTrackerMainWindow(QMainWindow):
 
     def test_connection(self):
         """Test connection to the current data service."""
-        status = self.expense_controller.get_data_service_status()
+        # Disable button and show loading state
+        self.test_connection_btn.setEnabled(False)
+        original_text = self.test_connection_btn.text()
+        self.test_connection_btn.setText("Testing...")
+        
+        # Update status bar
+        self.status_bar.showMessage("Testing connection to Google Sheets...")
+        
+        # Process events to update UI
+        from PySide6.QtWidgets import QApplication
+        QApplication.processEvents()
+        
+        try:
+            status = self.expense_controller.get_data_service_status()
+        finally:
+            # Restore button state
+            self.test_connection_btn.setEnabled(True)
+            self.test_connection_btn.setText(original_text)
         result = (
             status["details"]
             if "details" in status
@@ -1095,7 +1114,24 @@ class SpendingTrackerMainWindow(QMainWindow):
 
     def sync_data(self):
         """Perform data synchronization."""
-        result = self.expense_controller.sync_data()
+        # Disable button and show loading state
+        self.sync_now_btn.setEnabled(False)
+        original_text = self.sync_now_btn.text()
+        self.sync_now_btn.setText("Syncing...")
+        
+        # Update status bar
+        self.status_bar.showMessage("Synchronizing with Google Sheets...")
+        
+        # Process events to update UI
+        from PySide6.QtWidgets import QApplication
+        QApplication.processEvents()
+        
+        try:
+            result = self.expense_controller.sync_data()
+        finally:
+            # Restore button state
+            self.sync_now_btn.setEnabled(True)
+            self.sync_now_btn.setText(original_text)
 
         if result["success"]:
             QMessageBox.information(
@@ -1138,6 +1174,18 @@ class SpendingTrackerMainWindow(QMainWindow):
             QMessageBox.warning(self, "Invalid Input", "Please enter a spreadsheet ID.")
             return
 
+        # Disable button and show loading state
+        self.save_spreadsheet_id_btn.setEnabled(False)
+        original_text = self.save_spreadsheet_id_btn.text()
+        self.save_spreadsheet_id_btn.setText("Saving...")
+        
+        # Update status bar
+        self.status_bar.showMessage("Saving spreadsheet configuration...")
+        
+        # Process events to update UI
+        from PySide6.QtWidgets import QApplication
+        QApplication.processEvents()
+
         try:
             self.config_manager.update_spreadsheet_id(spreadsheet_id)
 
@@ -1160,6 +1208,10 @@ class SpendingTrackerMainWindow(QMainWindow):
             QMessageBox.information(self, "Saved", "Spreadsheet ID saved successfully!")
         except Exception as e:
             QMessageBox.warning(self, "Error", f"Failed to save spreadsheet ID: {e}")
+        finally:
+            # Restore button state
+            self.save_spreadsheet_id_btn.setEnabled(True)
+            self.save_spreadsheet_id_btn.setText(original_text)
 
     def reset_sample_data(self):
         """Reset to sample data (mock service only)."""
@@ -2462,28 +2514,97 @@ class SpendingTrackerMainWindow(QMainWindow):
             self.password_toggle_btn.setText("👁")  # Eye open
             self.password_toggle_btn.setToolTip("Click to show password")
 
+    @property
+    def expense_controller(self):
+        """Lazy-load the expense controller."""
+        if self._expense_controller is None:
+            from src.controllers.expense_controller import ExpenseController
+            self._expense_controller = ExpenseController(
+                self.config_manager, use_mock_data=self.use_mock_data
+            )
+        return self._expense_controller
+
+    @property
+    def email_service(self):
+        """Lazy-load the email service."""
+        if self._email_service is None:
+            from src.services.email_service import EmailService
+            self._email_service = EmailService(self.config_manager)
+        return self._email_service
+
+    @property
+    def email_scheduler(self):
+        """Lazy-load the email scheduler."""
+        if self._email_scheduler is None:
+            from src.services.email_scheduler import EmailScheduler
+            self._email_scheduler = EmailScheduler(
+                self.config_manager, self.expense_controller
+            )
+        return self._email_scheduler
+
+    def _complete_initialization(self):
+        """Complete the heavy initialization after UI is shown."""
+        try:
+            # Update status to show initialization is happening
+            self.status_bar.showMessage("Loading data...")
+            
+            # Setup connections
+            self.status_bar.showMessage("Setting up connections...")
+            self.setup_connections()
+            
+            # Load initial data in background
+            self.status_bar.showMessage("Loading expense data...")
+            self.load_initial_data()
+            
+            # Start email scheduler if enabled
+            self.status_bar.showMessage("Initializing email services...")
+            self.start_email_scheduler_on_launch()
+            
+            # Connect tab change event
+            self.tab_widget.currentChanged.connect(self.on_tab_changed)
+            
+            # Update status to ready
+            self.status_bar.showMessage("Ready - Welcome to Spending Tracker!")
+            
+        except Exception as e:
+            import traceback
+            error_msg = f"Initialization error: {e}"
+            self.status_bar.showMessage(error_msg)
+            # Print full traceback for debugging
+            if sys.stdout and sys.stdout.isatty():
+                print(f"Initialization failed: {traceback.format_exc()}")
+
     def closeEvent(self, event):
         """Handle application close event."""
+        # Show confirmation for normal closes
         reply = QMessageBox.question(
             self,
             "Close Application",
-            "Are you sure you want to close the Spending Tracker?",
+            "Close Spending Tracker?",  # Shorter message for faster reading
             QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No,
+            QMessageBox.Yes,  # Default to Yes for faster closing
         )
 
         if reply == QMessageBox.Yes:
-            # Stop email scheduler if it's running
-            try:
-                if self.email_scheduler and self.email_scheduler.is_running():
-                    self.email_scheduler.stop_scheduler()
-                    print("Email scheduler stopped")
-            except Exception as e:
-                print(f"Warning: Failed to stop email scheduler: {e}")
-
+            self._cleanup_and_close()
             event.accept()
         else:
             event.ignore()
+    
+    def _cleanup_and_close(self):
+        """Perform cleanup operations before closing."""
+        # Stop initialization timer if still running
+        if hasattr(self, 'initialization_timer'):
+            self.initialization_timer.stop()
+        
+        # Stop email scheduler if it's running (with timeout)
+        try:
+            if self._email_scheduler and self._email_scheduler.is_running():
+                # Use a timer to prevent hanging on shutdown
+                QTimer.singleShot(100, self._email_scheduler.stop_scheduler)
+        except Exception:
+            # Silently ignore cleanup errors during shutdown
+            pass
 
 
 def main():
@@ -2494,110 +2615,38 @@ def main():
     app.setApplicationName("Spending Tracker")
     app.setApplicationVersion("1.0.0")
     app.setOrganizationName("Personal Finance Tools")
-
-    # Create and show main window
-    window = SpendingTrackerMainWindow()
-    window.show()
+    
+    # Show splash screen for user feedback
+    from src.gui.splash_screen import show_splash_screen
+    splash = show_splash_screen()
+    
+    # Process events to show splash screen
+    app.processEvents()
+    
+    try:
+        # Create main window
+        splash.show_message("Creating main window...")
+        app.processEvents()
+        
+        window = SpendingTrackerMainWindow()
+        
+        splash.show_message("Finalising...")
+        app.processEvents()
+        
+        # Show main window and close splash
+        window.show()
+        splash.close()
+        
+    except Exception as e:
+        splash.close()
+        raise e
 
     # Run the application
     return app.exec()
 
 
-class ExpenseEditDialog(QDialog):
-    """Dialog for editing existing expenses."""
-
-    def __init__(self, expense, config, parent=None):
-        super().__init__(parent)
-        self.expense = expense
-        self.config = config
-
-        self.setWindowTitle("Edit Expense")
-        self.setModal(True)
-        self.resize(400, 300)
-
-        self.setup_ui()
-        self.load_expense_data()
-
-    def setup_ui(self):
-        """Set up the dialog UI."""
-        layout = QVBoxLayout(self)
-
-        # Form group
-        form_group = QGroupBox("Edit Expense Details")
-        form_layout = QGridLayout(form_group)
-
-        # Date input
-        form_layout.addWidget(QLabel("Date:"), 0, 0)
-        self.date_edit = QDateEdit()
-        self.date_edit.setCalendarPopup(True)
-        form_layout.addWidget(self.date_edit, 0, 1)
-
-        # Amount input
-        form_layout.addWidget(QLabel("Amount:"), 1, 0)
-        self.amount_spin = QDoubleSpinBox()
-        self.amount_spin.setRange(0.01, 999999.99)
-        self.amount_spin.setDecimals(2)
-        self.amount_spin.setPrefix(self.config["data"]["currency"]["symbol"])
-        form_layout.addWidget(self.amount_spin, 1, 1)
-
-        # Category input
-        form_layout.addWidget(QLabel("Category:"), 2, 0)
-        self.category_combo = QComboBox()
-        self.category_combo.setEditable(True)
-        self.category_combo.addItems(self.config["data"]["default_categories"])
-        form_layout.addWidget(self.category_combo, 2, 1)
-
-        # Description input
-        form_layout.addWidget(QLabel("Description:"), 3, 0)
-        self.description_edit = QLineEdit()
-        form_layout.addWidget(self.description_edit, 3, 1)
-
-        layout.addWidget(form_group)
-
-        # Buttons
-        button_layout = QHBoxLayout()
-
-        self.save_btn = QPushButton("Save Changes")
-        self.save_btn.setStyleSheet(
-            "background-color: #28a745; color: white; padding: 8px; font-weight: bold;"
-        )
-        self.save_btn.clicked.connect(self.accept)
-
-        self.cancel_btn = QPushButton("Cancel")
-        self.cancel_btn.setStyleSheet("padding: 8px;")
-        self.cancel_btn.clicked.connect(self.reject)
-
-        button_layout.addWidget(self.save_btn)
-        button_layout.addWidget(self.cancel_btn)
-        button_layout.addStretch()
-
-        layout.addLayout(button_layout)
-
-    def load_expense_data(self):
-        """Load the expense data into the form fields."""
-        from datetime import datetime
-
-        # Set date
-        date_obj = datetime.strptime(self.expense.date, "%Y-%m-%d")
-        self.date_edit.setDate(QDate(date_obj.year, date_obj.month, date_obj.day))
-
-        # Set amount
-        self.amount_spin.setValue(self.expense.amount)
-
-        # Set category
-        self.category_combo.setCurrentText(self.expense.category)
-
-        # Set description
-        self.description_edit.setText(self.expense.description)
-
-    def get_expense_data(self):
-        """Get the updated expense data from the form."""
-        date = self.date_edit.date().toString("yyyy-MM-dd")
-        amount = self.amount_spin.value()
-        category = self.category_combo.currentText()
-        description = self.description_edit.text()
-
-        return date, amount, category, description
+# ExpenseEditDialog moved to separate module for better organization
+# Will be imported when needed to reduce startup time
 
 
 if __name__ == "__main__":
